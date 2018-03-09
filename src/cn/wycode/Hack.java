@@ -1,15 +1,18 @@
 package cn.wycode;
 
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Subdiv2D;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
 
 public class Hack extends Thread {
 
@@ -29,7 +32,12 @@ public class Hack extends Thread {
         String root = Hack.class.getResource("/").getPath();
         String adbPath = root + "platform-tools/adb";
         File srcDir = new File(root, "imgs/input");
+        File outDir = new File(root, "imgs/output");
         srcDir.mkdirs();
+        outDir.mkdirs();
+
+        String  playerPath = getClass().getResource("/imgs/player.png").getPath();
+        Mat playerMat = Imgcodecs.imread(playerPath);
 
         int count = 0;
         while (!isStop) {
@@ -50,21 +58,24 @@ public class Hack extends Thread {
                     controller.appendText("截图获取成功.\n");
                     Mat mat = Imgcodecs.imread(file.getAbsolutePath());
                     Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2GRAY);
-                    Imgproc.Canny(mat,mat,20,40);
+
+                    Imgproc.Canny(mat, mat, 5, 20);
+//                    MatOfKeyPoint keyPoints = new MatOfKeyPoint();
+//                    FastFeatureDetector.create().detect(mat,keyPoints);
+//                    Features2d.drawKeypoints(mat,keyPoints,mat);
                     Image img = Utils.mat2Image(mat);
                     controller.setImage(img);
-
+                    Imgcodecs.imwrite(outDir.getPath() + "/" + file.getName(), mat);
 
 //                    controller.appendText("正在计算人物中心点...\n");
 
 
-
 //                    String adbCommand = adbPath + String.format(" shell input swipe %d %d %d %d %d", pressX, pressY, pressX, pressY, time);
 //                    Runtime.getRuntime().exec(adbCommand);
-                }else{
-                    count=0;
+                } else {
+                    count = 0;
                 }
-                int sleepTime = 500;
+                int sleepTime = 1000;
                 controller.appendText("等待" + sleepTime + "ms后继续\n");
                 if (isStop) {
                     break;
@@ -72,7 +83,7 @@ public class Hack extends Thread {
                 Thread.sleep(sleepTime);
             } catch (Exception e) {
                 e.printStackTrace();
-                controller.appendText("出现异常："+e.getMessage()+"\n");
+                controller.appendText("出现异常：" + e.getMessage() + "\n");
                 break;
             }
 
